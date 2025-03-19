@@ -5,19 +5,18 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
-#include <>
 #include <AK/WwiseAuthoringAPI/AkAutobahn/Client.h>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
-using RequestHandler = std::function<void(const http::request<http::string_body>&, http::response<http::string_body>&)>;
+using RequestHandler = std::function<void(const http::request<http::string_body>&, http::response<http::string_body>&, AK::WwiseAuthoringAPI::Client&)>;
 
 // HttpSession.
 class HttpSession : public std::enable_shared_from_this<HttpSession> {
 public:
-    HttpSession(tcp::socket socket, std::unordered_map<std::string, RequestHandler>& routes);
+    HttpSession(tcp::socket socket, std::unordered_map<std::string, RequestHandler>& routes, AK::WwiseAuthoringAPI::Client& waapi_client);
 
     void start();
 
@@ -27,7 +26,7 @@ private:
     http::request<http::string_body> request_;
     http::response<http::string_body> response_;
     std::unordered_map<std::string, RequestHandler>& routes_;
-
+    AK::WwiseAuthoringAPI::Client& waapi_client_;
     void readRequest();
 
     void handleRequest();

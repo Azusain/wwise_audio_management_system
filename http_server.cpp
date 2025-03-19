@@ -4,11 +4,11 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
-#include <rapidjson/document.h>
 #include "http_server.h"
 
 // Implement HttpSession.
-HttpSession::HttpSession(tcp::socket socket, std::unordered_map<std::string, RequestHandler>& routes) : socket_(std::move(socket)), routes_(routes) {}
+HttpSession::HttpSession(tcp::socket socket, std::unordered_map<std::string, RequestHandler>& routes, AK::WwiseAuthoringAPI::Client& waapi_client)
+    : socket_(std::move(socket)), routes_(routes), waapi_client_(waapi_client) {}
 
 void HttpSession::start() { readRequest(); }
 
@@ -23,7 +23,7 @@ void HttpSession::readRequest() {
 void HttpSession::handleRequest() {
     auto it = routes_.find(std::string(request_.target()));
     if (it != routes_.end()) {
-        it->second(request_, response_);
+        it->second(request_, response_, waapi_client_);
     }
     else {
         response_.result(http::status::not_found);
@@ -55,7 +55,7 @@ void HttpServer::Register(const std::string& path, RequestHandler handler) {
 void HttpServer::accept() {
     acceptor_.async_accept(
         [this](beast::error_code ec, tcp::socket socket) {
-            if (!ec) std::make_shared<HttpSession>(std::move(socket), routes_)->start();
+            if (!ec) std::make_shared<HttpSession>(std::move(socket), routes_, waapi_client_)->start();
             accept();
         });
 }
@@ -67,7 +67,7 @@ void HttpServer::Start() {
 // Register router.
 bool ConfigureHttpRouter(HttpServer& server) noexcept {
     try {
-        server.Register("/", [](const http::request<http::string_body>& req, http::response<http::string_body>& res) {
+        server.Register("/", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& client) {
             //std::cout << "request body: \n";
             //rapidjson::Document doc;
             //doc.Parse(req.body().c_str());
@@ -82,7 +82,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         });
 
         // Import audio files.
-        server.Register("/import", [](const http::request<http::string_body>& req, http::response<http::string_body>& res) {
+        server.Register("/import", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& client) {
             res.result(http::status::ok);
             res.body() = "Goodbye!";
         });
