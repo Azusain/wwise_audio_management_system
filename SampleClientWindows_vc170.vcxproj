@@ -614,6 +614,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="http_server.h" />
     <ClInclude Include="RapidJsonUtils.h" />
     <ClInclude Include="StressTest.h" />
     <ClInclude Include="TestClient.h" />
@@ -621,6 +622,7 @@
     <ClInclude Include="TestMonitoring.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="http_server.cpp" />
     <ClCompile Include="SampleClient.cpp" />
     <ClCompile Include="StressTest.cpp" />
     <ClCompile Include="TestClient.cpp" />
