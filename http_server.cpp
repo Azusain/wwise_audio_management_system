@@ -1,11 +1,26 @@
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
 #include <iostream>
 #include <memory>
 #include <functional>
 #include <unordered_map>
 #include <AK/WwiseAuthoringAPI/waapi.h>
 #include "http_server.h"
+#include <AK/WwiseAuthoringAPI/AkAutobahn/AkJson.h>
+#include <AK/WwiseAuthoringAPI/AkAutobahn/AkVariant.h>
+#include <AK/WwiseAuthoringAPI/AkAutobahn/Client.h>
+#include <AK/WwiseAuthoringAPI/AkJsonBase.h>
+#include <exception>
+#include <string>
+#include <type_traits>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/socket_base.hpp>
+#include <boost/beast/core/error.hpp>
+#include <boost/beast/http/field.hpp>
+#include <boost/beast/http/impl/read.hpp>
+#include <boost/beast/http/impl/write.hpp>
+#include <boost/beast/http/message_fwd.hpp>
+#include <boost/beast/http/status.hpp>
+#include <boost/beast/http/string_body_fwd.hpp>
+#include "RapidJsonUtils.h"
 
 // For official good pratices:
 // https://www.audiokinetic.com/en/library/edge/?source=SDK&id=waapi_example_index.html.
@@ -70,8 +85,6 @@ void HttpServer::Start() {
 }
 
 
-
-
 // Register router.
 bool ConfigureHttpRouter(HttpServer& server) noexcept {
     using namespace AK::WwiseAuthoringAPI;
@@ -94,40 +107,50 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         // Import audio files.
         // Ref: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=ak_wwise_core_audio_import.html
         server.Register("/import", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
-     /*       AkJson request_body(AkJson::Map{
-                {"objects", AkJson::Array{
-                   AkJson::Map{
-                       {"object", AkVariant("/Actor-Mixer Hierarchy/Default Work Unit/New")},
-                       {"import", AkJson::Map{
-                            {"files", AkJson::Array{
-                                AkJson::Map{
-                                    {"audioFile", AkVariant("C:/Users/azusaing/Desktop/Music")}
-                                }
-                            }}
-                       }}
-                    }
-                }},
-                {"onNameConflict", AkVariant("merge")}
-            });*/
-            //AkJson result_json;
+     /*       AkJson::Map imported_objects{
+          {"audioFile", AkVariant("C:\\Users\\azusaing\\Desktop\\Music.wav")},
+          {"objectPath", AkVariant("\\Actor-Mixer Hierarchy\\Default Work Unit\\<Sequence Container>Test 0\\<Sound SFX>My SFX 0")}
+            };*/
+            AkJson::Array imported_objects;
+            
+            // parse request.
+            rapidjson::Document doc;
+            doc.Parse(req.body().c_str());
+            if (doc.HasParseError()) {
+                res.body() = "invalid json format";
+                return;
+            }
+            if (doc.HasMember("audioFiles")) {
+                auto& audioFiles = doc["audioFiles"];
+                if (!audioFiles.IsArray()) {
+                    std::cerr << "audioFiles should be an array\n";
+                    return;
+                }
 
+                for (auto it = audioFiles.Begin(); it != audioFiles.End(); ++it) {
+                    imported_objects.emplace_back(AkJson::Map{
+                        {"audioFile", AkVariant((*it)["audioFile"].GetString())},
+                        {"objectPath", AkVariant((*it)["objectPath"].GetString())}
+                    });
 
-            std::string request_body = R"(
-{
-    "importOperation": "useExisting", 
-    "imports": [
-        {
-            "audioFile": "C:\\Users\\azusaing\\Desktop\\Music.wav", 
-            "objectPath": "\\Actor-Mixer Hierarchy\\Default Work Unit\\<Sequence Container>Test 0\\<Sound SFX>My SFX 0"
-        }
-    ]
-}
-)";
+                }
+            }
+            else {
+                std::cerr << "invalid request arguments\n";
+                return;
+            }
+
+            // response.
+            AkJson request_json(AkJson::Map{
+                {"importOperation", AkVariant("useExisting")},
+                {"imports", imported_objects}
+            });
+            AkJson result_json;
+
             std::string result_str;
-            int ret = waapi_client.Call(ak::wwise::core::audio::import, request_body.c_str(), "{}", result_str);
+            int ret = waapi_client.Call(ak::wwise::core::audio::import, request_json, AkJson(AkJson::Type::Map), result_json);
             if (!ret) {
                 std::cout << "failed to import audio files\n";
-                res.body() = result_str;
                 res.result(http::status::not_found);
                 return;
             }
