@@ -1,7 +1,7 @@
 #include <AK/WwiseAuthoringAPI/AkAutobahn/Client.h>
 #include <iostream>
 #include "http_server.h"
-
+#include <AK/WwiseAuthoringAPI/waapi.h>
 
 //int main(int argc, char** argv)
 //{
@@ -84,7 +84,10 @@ int main(int argc, char* argv[]) {
 		return -1;
 	};
 	std::cout << "successfully connected to host\n";
-	
+
+
+
+
     // setup http server.
     HttpServer server(server_port, waapi_client);
     if (!ConfigureHttpRouter(server)) {
@@ -93,5 +96,6 @@ int main(int argc, char* argv[]) {
     }
 	std::cout << "Server running on port " << server_port << "\n";
 	server.Start();
+
 	return 0;
 }
