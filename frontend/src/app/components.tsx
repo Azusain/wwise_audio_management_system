@@ -365,12 +365,17 @@ const AudioImportMainContent = () => {
   const [audioEntries, setAudioEntries] = useState<ImportedAudioEntry[]>();
 
   const getSelectedFiles = async () => {
-    const resp = await fetch(`http://localhost:5080/select`, {
+    const resp = await fetch(`${backendUrl}/select`, {
       method: "GET",
       headers: apiHeaders,
     });
     const json_resp = await resp.json();
-    console.log(json_resp);
+    setAudioEntries(
+      json_resp.files.map((path: string) => ({
+        name: path,
+        type: "sound SFX",
+      }))
+    );
   };
 
   return (
@@ -426,6 +431,7 @@ const AudioImportMainContent = () => {
           <tr>
             <th>编号</th>
             <th>文件路径</th>
+            <th>导入类型</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -437,8 +443,9 @@ const AudioImportMainContent = () => {
                   <tr key={idx}>
                     <th>{idx}</th>
                     <td>{entry.name}</td>
+                    <td>{entry.type}</td>
                     <td>
-                      <button className="btn">Delete</button>
+                      <button className="btn">删除</button>
                     </td>
                   </tr>
                 );
