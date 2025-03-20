@@ -23,6 +23,8 @@
 #include "RapidJsonUtils.h"
 #include "json.hpp"
 
+using json = nlohmann::json;
+
 // For official good pratices:
 // https://www.audiokinetic.com/en/library/edge/?source=SDK&id=waapi_example_index.html.
 
@@ -145,7 +147,30 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         return;
       }
       res.result(http::status::ok);
-      });
+    });
+
+    // Get children.
+    server.Register("/children", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
+      json ui_req_json = json::parse(req.body());
+      auto parent_path = ui_req_json["parent"].get<std::string>();
+      json req_json{
+        {"waql", "$ \"" + parent_path + "\"" + "select children"},
+      };
+      json opt_json{
+        {"return", {"path", "id"}}
+      };
+      std::string result_str;
+      int ret = waapi_client.Call(ak::wwise::core::object::get, req_json.dump().c_str(), opt_json.dump().c_str(), result_str);
+      json ret_json = json::parse(result_str);
+      if (!ret) {
+        res.body() = result_str;
+        return;
+      }
+
+      std::cout << result_str << "\n";
+
+    });
+      
   }
   catch (const std::exception& e) {
     std::cerr << "Server error: " << e.what() << "\n";
