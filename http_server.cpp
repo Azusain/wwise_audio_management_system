@@ -46,15 +46,26 @@ void HttpSession::readRequest() {
 }
 
 void HttpSession::handleRequest() {
+  // CORS.
+  // Not only OPTIONS requests but GET requests need these headers.
+  response_.set(http::field::access_control_allow_origin, "*");
+  response_.set(http::field::access_control_allow_methods, "GET, POST, OPTIONS");
+  response_.set(http::field::access_control_allow_headers, "Content-Type, Authorization");
+  response_.result(http::status::ok);
+
+  // call responding handler.
   auto it = routes_.find(std::string(request_.target()));
   if (it != routes_.end()) {
     it->second(request_, response_, server_ref_);
   }
   else {
+    std::cerr << "invalid request from client\n";
     response_.result(http::status::not_found);
     response_.set(http::field::content_type, "text/plain");
     response_.body() = "404 Not Found";
   }
+
+
   response_.prepare_payload();
   writeResponse();
 }
@@ -94,7 +105,7 @@ void HttpServer::Start() {
 bool ConfigureHttpRouter(HttpServer& server) noexcept {
   using namespace AK::WwiseAuthoringAPI;
   using json = nlohmann::json;
-  
+
   try {
     // Default response.
     server.Register("/", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
@@ -148,7 +159,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         return;
       }
       res.result(http::status::ok);
-    });
+      });
 
     // Get children.
     server.Register("/children", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
@@ -169,8 +180,8 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         return;
       }
       std::cout << result_str << "\n";
-    });
-    
+      });
+
     // Select Files.
     server.Register("/select", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
       server.selected_files_.clear();
@@ -186,7 +197,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       res.body() = resp.dump();
       res.result(http::status::ok);
       return;
-    });
+      });
 
     // Get Selected Files.
     server.Register("/getSelected", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
@@ -199,7 +210,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       };
       res.body() = resp.dump();
       res.result(http::status::ok);
-    });
+      });
   }
 
   catch (const std::exception& e) {

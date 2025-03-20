@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 
+const backendUrl: string = "http://localhost:5080";
+const apiHeaders = {
+  "Content-Type": "application/json",
+};
+
 const Header = () => {
   return (
     <div className="navbar bg-base-100">
@@ -336,7 +341,6 @@ const FileUploadComponent = () => {
       });
     },
   });
-
   return (
     <div
       {...getRootProps()}
@@ -359,6 +363,15 @@ const AudioImportMainContent = () => {
   );
   const [parentPath, setParentPath] = useState("");
   const [audioEntries, setAudioEntries] = useState<ImportedAudioEntry[]>();
+
+  const getSelectedFiles = async () => {
+    const resp = await fetch(`http://localhost:5080/getSelected`, {
+      method: "GET",
+      headers: apiHeaders,
+    });
+    const json_resp = await resp.json();
+    console.log(json_resp.files);
+  };
 
   return (
     <div>
@@ -388,7 +401,7 @@ const AudioImportMainContent = () => {
           <option>不创建容器 (None)</option>
         </select>
       </div>
-      {/* create button */}
+      {/* import button */}
       <button
         className="btn btn-outline"
         onClick={() => {
@@ -398,6 +411,11 @@ const AudioImportMainContent = () => {
       >
         导入
       </button>
+      {/* select files button */}
+      <button className="btn btn-outline" onClick={getSelectedFiles}>
+        选择文件
+      </button>
+
       {/* choose files */}
       <div>
         <FileUploadComponent />
