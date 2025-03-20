@@ -165,21 +165,33 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       json ret_json = json::parse(result_str);
       if (!ret) {
         res.body() = result_str;
+        res.result(http::status::not_found);
         return;
       }
       std::cout << result_str << "\n";
     });
     
     // Select Files.
-    
-    //server.Register("/select_files", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
-    //  OpenFileDialogMultiSelect()
-
-
-    //});
-
-
+    server.Register("/select", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      if (!OpenFileDialogMultiSelect(server.selected_files_)) {
+        json resp{
+          {"error", "error occurs while selecting files"}
+        };
+        res.body() = resp.dump();
+        res.result(http::status::not_found);
+        return;
+      };
+      json resp{ {"selected_files_num", server.selected_files_.size()} };
+      res.body() = resp.dump();
+      res.result(http::status::ok);
+      return;
+    });
   }
+
+  // Get Selected Files.
+  
+
+
   catch (const std::exception& e) {
     std::cerr << "Server error: " << e.what() << "\n";
     return false;
