@@ -30,7 +30,6 @@ public:
   tcp::acceptor acceptor_;
   std::unordered_map<std::string, RequestHandler> routes_;
   AK::WwiseAuthoringAPI::Client waapi_client_;
-  std::vector<std::string> selected_files_;
 
   void accept();
 };

@@ -54,17 +54,18 @@ void HttpSession::handleRequest() {
   response_.result(http::status::ok);
 
   // call responding handler.
-  auto it = routes_.find(std::string(request_.target()));
-  if (it != routes_.end()) {
-    it->second(request_, response_, server_ref_);
+  if (request_.method() != http::verb::options) {
+    auto it = routes_.find(std::string(request_.target()));
+    if (it != routes_.end()) {
+      it->second(request_, response_, server_ref_);
+    }
+    else {
+      std::cerr << "invalid request from client\n";
+      response_.result(http::status::not_found);
+      response_.set(http::field::content_type, "text/plain");
+      response_.body() = "404 Not Found";
+    }
   }
-  else {
-    std::cerr << "invalid request from client\n";
-    response_.result(http::status::not_found);
-    response_.set(http::field::content_type, "text/plain");
-    response_.body() = "404 Not Found";
-  }
-
 
   response_.prepare_payload();
   writeResponse();
@@ -184,8 +185,8 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
 
     // Select Files.
     server.Register("/select", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
-      server.selected_files_.clear();
-      if (!OpenFileDialogMultiSelect(server.selected_files_)) {
+      std::vector<std::string> selected_files;
+      if (!OpenFileDialogMultiSelect(selected_files)) {
         json resp{
           {"error", "error occurs while selecting files"}
         };
@@ -193,16 +194,8 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         res.result(http::status::not_found);
         return;
       };
-      json resp{ {"selected_files_num", server.selected_files_.size()} };
-      res.body() = resp.dump();
-      res.result(http::status::ok);
-      return;
-      });
-
-    // Get Selected Files.
-    server.Register("/getSelected", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
       json selected_files_json = json::array();
-      for (auto file : server.selected_files_) {
+      for (auto file : selected_files) {
         selected_files_json.push_back(file);
       }
       json resp{
@@ -210,6 +203,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       };
       res.body() = resp.dump();
       res.result(http::status::ok);
+      return;
       });
   }
 

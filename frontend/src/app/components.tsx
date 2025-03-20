@@ -365,12 +365,12 @@ const AudioImportMainContent = () => {
   const [audioEntries, setAudioEntries] = useState<ImportedAudioEntry[]>();
 
   const getSelectedFiles = async () => {
-    const resp = await fetch(`http://localhost:5080/getSelected`, {
+    const resp = await fetch(`http://localhost:5080/select`, {
       method: "GET",
       headers: apiHeaders,
     });
     const json_resp = await resp.json();
-    console.log(json_resp.files);
+    console.log(json_resp);
   };
 
   return (
