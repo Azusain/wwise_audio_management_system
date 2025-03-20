@@ -21,6 +21,7 @@
 #include <boost/beast/http/status.hpp>
 #include <boost/beast/http/string_body_fwd.hpp>
 #include "RapidJsonUtils.h"
+#include "json.hpp"
 
 // For official good pratices:
 // https://www.audiokinetic.com/en/library/edge/?source=SDK&id=waapi_example_index.html.
@@ -89,11 +90,16 @@ void HttpServer::Start() {
 // Register router.
 bool ConfigureHttpRouter(HttpServer& server) noexcept {
   using namespace AK::WwiseAuthoringAPI;
+  using json = nlohmann::json;
+  
   try {
     // Default response.
     server.Register("/", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
       res.result(http::status::ok);
-      res.body() = "Welcome to waapi control server";
+      json resp_json{
+        {"message", "Welcome to waapi control server"}
+      };
+      res.body() = resp_json.dump();
       });
 
     // Import audio files.
