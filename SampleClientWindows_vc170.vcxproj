@@ -620,6 +620,7 @@
     <ClInclude Include="TestClient.h" />
     <ClInclude Include="TestErrors.h" />
     <ClInclude Include="TestMonitoring.h" />
+    <ClInclude Include="ui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="http_server.cpp" />
@@ -628,6 +629,7 @@
     <ClCompile Include="TestClient.cpp" />
     <ClCompile Include="TestErrors.cpp" />
     <ClCompile Include="TestMonitoring.cpp" />
+    <ClCompile Include="ui.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

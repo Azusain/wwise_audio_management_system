@@ -22,6 +22,7 @@
 #include <boost/beast/http/string_body_fwd.hpp>
 #include "RapidJsonUtils.h"
 #include "json.hpp"
+#include "ui.h"
 
 using json = nlohmann::json;
 
@@ -30,8 +31,8 @@ using json = nlohmann::json;
 
 
 // Implement HttpSession.
-HttpSession::HttpSession(tcp::socket socket, std::unordered_map<std::string, RequestHandler>& routes, AK::WwiseAuthoringAPI::Client& waapi_client)
-  : socket_(std::move(socket)), routes_(routes), waapi_client_(waapi_client) {
+HttpSession::HttpSession(tcp::socket socket, std::unordered_map<std::string, RequestHandler>& routes, HttpServer& server)
+  : socket_(std::move(socket)), routes_(routes), server_ref_(server) {
 }
 
 void HttpSession::start() { readRequest(); }
@@ -47,7 +48,7 @@ void HttpSession::readRequest() {
 void HttpSession::handleRequest() {
   auto it = routes_.find(std::string(request_.target()));
   if (it != routes_.end()) {
-    it->second(request_, response_, waapi_client_);
+    it->second(request_, response_, server_ref_);
   }
   else {
     response_.result(http::status::not_found);
@@ -79,7 +80,7 @@ void HttpServer::Register(const std::string& path, RequestHandler handler) {
 void HttpServer::accept() {
   acceptor_.async_accept(
     [this](beast::error_code ec, tcp::socket socket) {
-      if (!ec) std::make_shared<HttpSession>(std::move(socket), routes_, waapi_client_)->start();
+      if (!ec) std::make_shared<HttpSession>(std::move(socket), routes_, *this)->start();
       accept();
     });
 }
@@ -96,7 +97,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
   
   try {
     // Default response.
-    server.Register("/", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
+    server.Register("/", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
       res.result(http::status::ok);
       json resp_json{
         {"message", "Welcome to waapi control server"}
@@ -106,7 +107,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
 
     // Import audio files.
     // Ref: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=ak_wwise_core_audio_import.html
-    server.Register("/import", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
+    server.Register("/import", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
       AkJson::Array imported_objects;
       // parse request.
       rapidjson::Document doc;
@@ -140,7 +141,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       AkJson result_json;
 
       std::string result_str;
-      int ret = waapi_client.Call(ak::wwise::core::audio::import, request_json, AkJson(AkJson::Type::Map), result_json);
+      int ret = server.waapi_client_.Call(ak::wwise::core::audio::import, request_json, AkJson(AkJson::Type::Map), result_json);
       if (!ret) {
         std::cout << "failed to import audio files\n";
         res.result(http::status::not_found);
@@ -150,7 +151,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
     });
 
     // Get children.
-    server.Register("/children", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
+    server.Register("/children", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
       json ui_req_json = json::parse(req.body());
       auto parent_path = ui_req_json["parent"].get<std::string>();
       json req_json{
@@ -160,17 +161,24 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         {"return", {"path", "id"}}
       };
       std::string result_str;
-      int ret = waapi_client.Call(ak::wwise::core::object::get, req_json.dump().c_str(), opt_json.dump().c_str(), result_str);
+      int ret = server.waapi_client_.Call(ak::wwise::core::object::get, req_json.dump().c_str(), opt_json.dump().c_str(), result_str);
       json ret_json = json::parse(result_str);
       if (!ret) {
         res.body() = result_str;
         return;
       }
-
       std::cout << result_str << "\n";
-
     });
-      
+    
+    // Select Files.
+    
+    //server.Register("/select_files", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, AK::WwiseAuthoringAPI::Client& waapi_client) {
+    //  OpenFileDialogMultiSelect()
+
+
+    //});
+
+
   }
   catch (const std::exception& e) {
     std::cerr << "Server error: " << e.what() << "\n";

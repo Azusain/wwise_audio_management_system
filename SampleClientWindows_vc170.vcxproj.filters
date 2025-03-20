@@ -7,6 +7,7 @@
     <ClInclude Include="TestErrors.h" />
     <ClInclude Include="TestMonitoring.h" />
     <ClInclude Include="http_server.h" />
+    <ClInclude Include="ui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SampleClient.cpp" />
@@ -15,5 +16,6 @@
     <ClCompile Include="TestErrors.cpp" />
     <ClCompile Include="TestMonitoring.cpp" />
     <ClCompile Include="http_server.cpp" />
+    <ClCompile Include="ui.cpp" />
   </ItemGroup>
 </Project>

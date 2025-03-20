@@ -1,14 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Header,
-  Sidebar,
-  FirewallMainContent,
-  SettingsMainContent,
-} from "./components";
+import { AudioImportMainContent, Header, Sidebar } from "./components";
 
 export default function Home() {
-  const [sidebar, setSidebar] = useState("Firewall");
+  const [sidebar, setSidebar] = useState("导入");
 
   return (
     <div className="flex flex-row">
@@ -18,8 +13,8 @@ export default function Home() {
       <div className="w-3/4">
         <Header />
         {/* main content */}
-        {sidebar == "Firewall" && <FirewallMainContent />}
-        {sidebar == "Settings" && <SettingsMainContent />}
+        {sidebar == "导入" && <AudioImportMainContent />}
+        {/* {sidebar == "统计" && <SettingsMainContent />} */}
       </div>
     </div>
   );
