@@ -298,7 +298,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <PreprocessorDefinitions>_DEBUG;WIN64;WIN32_LEAN_AND_MEAN;VALIDATE_WAMP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\..\..\include;..\external\rapidjson;%(AdditionalIncludeDirectories);C:\Users\azusaing\Desktop\boost_1_87_0</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>

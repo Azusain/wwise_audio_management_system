@@ -173,6 +173,7 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
     
     // Select Files.
     server.Register("/select", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      server.selected_files_.clear();
       if (!OpenFileDialogMultiSelect(server.selected_files_)) {
         json resp{
           {"error", "error occurs while selecting files"}
@@ -186,11 +187,20 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       res.result(http::status::ok);
       return;
     });
+
+    // Get Selected Files.
+    server.Register("/getSelected", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      json selected_files_json = json::array();
+      for (auto file : server.selected_files_) {
+        selected_files_json.push_back(file);
+      }
+      json resp{
+        {"files", selected_files_json}
+      };
+      res.body() = resp.dump();
+      res.result(http::status::ok);
+    });
   }
-
-  // Get Selected Files.
-  
-
 
   catch (const std::exception& e) {
     std::cerr << "Server error: " << e.what() << "\n";
