@@ -180,7 +180,8 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         res.result(http::status::not_found);
         return;
       }
-      std::cout << result_str << "\n";
+      res.body() = result_str;
+      res.result(http::status::ok);
       });
 
     // Select Files.

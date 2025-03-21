@@ -333,6 +333,18 @@ const Sidebar: React.FC<SidebarInterface> = (props) => {
 //   );
 // };
 
+function convertToWwiseObject(containerType: string): string {
+  const mapping: Record<string, string> = {
+    "顺序容器 (Sequence Container)": "<Sequence Container>",
+    "随机容器 (Random Container)": "<Random Container>",
+    "切换容器 (Switch Container)": "<Switch Container>",
+    "融合容器 (Blend Container)": "<Blend Container>",
+    "不创建容器 (None)": "",
+  };
+
+  return mapping[containerType] || "<Unknown>";
+}
+
 const FileUploadComponent = () => {
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (acceptedFiles: File[]) => {
@@ -353,16 +365,21 @@ const FileUploadComponent = () => {
 };
 
 interface ImportedAudioEntry {
+  localFilePath: string;
   name: string;
-  type: string;
 }
-
+//
+// <Sound SFX> or <Sound Voice>
 const AudioImportMainContent = () => {
   const [selectedOptions, setSelectedOptions] = useState(
     "顺序容器 (Sequence Container)"
   );
   const [parentPath, setParentPath] = useState("");
   const [audioEntries, setAudioEntries] = useState<ImportedAudioEntry[]>();
+  const [newContainerName, setNewContainerName] = useState("");
+  // <Sound SFX> or <Sound Voice>
+  const [importType, setImportType] = useState("<Sound SFX>");
+  const [importLang, setImportLang] = useState("English(US)");
 
   const getSelectedFiles = async () => {
     const resp = await fetch(`${backendUrl}/select`, {
@@ -370,12 +387,12 @@ const AudioImportMainContent = () => {
       headers: apiHeaders,
     });
     const json_resp = await resp.json();
-    setAudioEntries(
-      json_resp.files.map((path: string) => ({
-        name: path,
-        type: "sound SFX",
-      }))
-    );
+    setAudioEntries([
+      ...(audioEntries || []),
+      ...json_resp.files.map((path: string) => ({
+        localFilePath: path,
+      })),
+    ]);
   };
 
   return (
@@ -389,22 +406,63 @@ const AudioImportMainContent = () => {
           setParentPath(e.target.value);
         }}
       ></input>
-      {/* select target container */}
-      <div>
-        <label className="block">选择目标容器</label>
-        <select
-          className="select select-bordered"
-          value={selectedOptions}
-          onChange={(e) => {
-            setSelectedOptions(e.target.value);
-          }}
-        >
-          <option>顺序容器 (Sequence Container)</option>
-          <option>随机容器 (Random Container)</option>
-          <option>切换容器 (Switch Container)</option>
-          <option>融合容器 (Blend Container)</option>
-          <option>不创建容器 (None)</option>
-        </select>
+      {/* create a new container */}
+      <div className="flex flex-row">
+        <div>
+          <label className="block">创建新容器</label>
+          <select
+            className="select select-bordered"
+            value={selectedOptions}
+            onChange={(e) => {
+              setSelectedOptions(e.target.value);
+            }}
+          >
+            <option>顺序容器 (Sequence Container)</option>
+            <option>随机容器 (Random Container)</option>
+            <option>切换容器 (Switch Container)</option>
+            <option>融合容器 (Blend Container)</option>
+            <option>不创建容器 (None)</option>
+          </select>
+        </div>
+        <div className={selectedOptions == "不创建容器 (None)" ? "hidden" : ""}>
+          <label className="block">新容器名称</label>
+          <input
+            type="text"
+            className="input border-black"
+            onChange={(e) => {
+              setNewContainerName(e.target.value);
+            }}
+          ></input>
+        </div>
+      </div>
+      {/* import type */}
+      <div className="flex flex-row">
+        <div>
+          <label className="block">导入类型</label>
+          <select
+            className="select select-bordered"
+            value={importType.slice(1, -1)}
+            onChange={(e) => {
+              setImportType(`<${e.target.value}>`);
+            }}
+          >
+            <option>{"Sound SFX"}</option>
+            <option>{"Sound Voice"}</option>
+          </select>
+        </div>
+        <div className={importType == "<Sound SFX>" ? "hidden" : ""}>
+          <label className="block">语言</label>
+          <select
+            className="select select-bordered"
+            value={importLang}
+            onChange={(e) => {
+              setImportLang(e.target.value);
+            }}
+          >
+            <option>English(US)</option>
+            <option></option>
+          </select>
+        </div>
       </div>
       {/* import button */}
       <button
@@ -431,7 +489,6 @@ const AudioImportMainContent = () => {
           <tr>
             <th>编号</th>
             <th>文件路径</th>
-            <th>导入类型</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -442,10 +499,18 @@ const AudioImportMainContent = () => {
                 return (
                   <tr key={idx}>
                     <th>{idx}</th>
-                    <td>{entry.name}</td>
-                    <td>{entry.type}</td>
+                    <td>{entry.localFilePath}</td>
                     <td>
-                      <button className="btn">删除</button>
+                      <button
+                        className="btn"
+                        onClick={() => {
+                          setAudioEntries((prevEntries = []) =>
+                            prevEntries.filter((_, index) => index !== idx)
+                          );
+                        }}
+                      >
+                        删除
+                      </button>
                     </td>
                   </tr>
                 );
