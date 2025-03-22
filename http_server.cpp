@@ -142,7 +142,6 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
           {"importLanguage", import_lang}
         };
       }
-      std::cout << outgoing_request_json.dump(2) << "\n";
       std::string result_str;
       int ret = server.waapi_client_.Call(ak::wwise::core::audio::import, outgoing_request_json.dump().c_str(), "{}", result_str);
       if (!ret) {
