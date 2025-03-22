@@ -1,5 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import Image from "next/image";
 
 const backendUrl: string = "http://localhost:5080";
 const apiHeaders = {
@@ -311,30 +312,39 @@ const AudioImportMainContent = () => {
   };
 
   return (
-    <div>
+    <div className="ml-[-50px]">
       {/* set parent path */}
       <div>
         <label className="block">设定导入位置</label>
-        <div className="flex flex-row">
+        <div className="flex flex-row mt-1">
           <input
             type="text"
             value={parentPath}
-            className="input border-black"
+            className="input border-gray-300 w-96 outline-none"
             onChange={(e) => {
               setParentPath(e.target.value);
             }}
           />
-          <button className="btn btn-outline" onClick={getSelectedPath}>
+          <button
+            className="btn btn-outline font-medium ml-10 focus:outline-none"
+            onClick={getSelectedPath}
+          >
+            <Image
+              width={20}
+              height={20}
+              src={"icons/sync.svg"}
+              alt={""}
+            ></Image>
             使用 Wwise 中选中的路径
           </button>
         </div>
       </div>
       {/* create a new container */}
-      <div className="flex flex-row">
+      <div className="flex flex-row mt-6">
         <div>
           <label className="block">创建新容器</label>
           <select
-            className="select select-bordered"
+            className="select select-bordered mt-1 w-72"
             value={selectedContainerType}
             onChange={(e) => {
               setSelectedContainerType(e.target.value);
@@ -352,10 +362,10 @@ const AudioImportMainContent = () => {
             selectedContainerType == "不创建容器 (None)" ? "hidden" : ""
           }
         >
-          <label className="block">新容器名称</label>
+          <label className="block ml-[135px]">新容器名称</label>
           <input
             type="text"
-            className="input border-black"
+            className="input border-gray-300 mt-1 ml-[135px]"
             onChange={(e) => {
               setNewContainerName(e.target.value);
             }}
@@ -363,11 +373,11 @@ const AudioImportMainContent = () => {
         </div>
       </div>
       {/* import type */}
-      <div className="flex flex-row">
+      <div className="flex flex-row mt-6">
         <div>
           <label className="block">导入类型</label>
           <select
-            className="select select-bordered"
+            className="select select-bordered mt-1"
             value={importType.slice(1, -1)}
             onChange={(e) => {
               setImportType(`<${e.target.value}>`);
@@ -378,10 +388,10 @@ const AudioImportMainContent = () => {
             <option>{"Sound Voice"}</option>
           </select>
         </div>
-        <div className={importType == "<Sound SFX>" ? "hidden" : ""}>
+        <div className={importType == "<Sound SFX>" ? "hidden" : "" + "ml-4"}>
           <label className="block">语言</label>
           <select
-            className="select select-bordered"
+            className="select select-bordered mt-1"
             value={importLang}
             onChange={(e) => {
               setImportLang(e.target.value);
@@ -393,21 +403,28 @@ const AudioImportMainContent = () => {
           </select>
         </div>
       </div>
-      {/* import button */}
-      <button className="btn btn-outline" onClick={importAudio}>
-        导入
-      </button>
       {/* select files button */}
-      <button className="btn btn-outline" onClick={getSelectedFiles}>
+      <button
+        className="btn btn-outline font-medium focus:outline-none"
+        onClick={getSelectedFiles}
+      >
         添加文件
       </button>
+      {/* import button */}
+      <button
+        className="btn btn-outline mt-8 ml-[105px] font-medium focus:outline-none"
+        onClick={importAudio}
+      >
+        确定导入
+      </button>
+
       {/* choose files */}
       {/* TODO: Remote file upload. */}
       {/* <div>
         <FileUploadComponent />
       </div> */}
       {/* audio files ready for importing */}
-      <table className="table">
+      <table className="table mt-4">
         <thead>
           <tr>
             <th>编号</th>
