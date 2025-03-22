@@ -101,7 +101,6 @@ void HttpServer::Start() {
   io_context_.run();
 }
 
-
 // Register router.
 bool ConfigureHttpRouter(HttpServer& server) noexcept {
   using namespace AK::WwiseAuthoringAPI;
@@ -120,47 +119,41 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
     // Import audio files.
     // Ref: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=ak_wwise_core_audio_import.html
     server.Register("/import", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
-      AkJson::Array imported_objects;
-      // parse request.
-      rapidjson::Document doc;
-      doc.Parse(req.body().c_str());
-      if (doc.HasParseError()) {
-        res.body() = "invalid json format";
-        return;
-      }
-      if (doc.HasMember("audioFiles")) {
-        auto& audioFiles = doc["audioFiles"];
-        if (!audioFiles.IsArray()) {
-          std::cerr << "audioFiles should be an array\n";
-          return;
-        }
-        for (auto it = audioFiles.Begin(); it != audioFiles.End(); ++it) {
-          imported_objects.emplace_back(AkJson::Map{
-              {"audioFile", AkVariant((*it)["audioFile"].GetString())},
-              {"objectPath", AkVariant((*it)["objectPath"].GetString())}
-            });
-        }
-      }
-      else {
-        std::cerr << "invalid request arguments\n";
-        return;
-      }
-      // response.
-      AkJson request_json(AkJson::Map{
-          {"importOperation", AkVariant("useExisting")},
-          {"imports", imported_objects}
-        });
-      AkJson result_json;
-
-      std::string result_str;
-      int ret = server.waapi_client_.Call(ak::wwise::core::audio::import, request_json, AkJson(AkJson::Type::Map), result_json);
-      if (!ret) {
-        std::cout << "failed to import audio files\n";
+      // check and extract json fields.
+      json incoming_request_json = json::parse(req.body());
+      if (!incoming_request_json.contains("audioFiles")) {
+        res.body() = json{ {"error", "missing json field: audioFiles"} }.dump();
         res.result(http::status::not_found);
         return;
       }
+      // only valid while importing sou
+      if (!incoming_request_json.contains("importLang")) {
+        res.body() = json{ {"error", "missing json field: importLang"} }.dump();
+        res.result(http::status::not_found);
+        return;
+      }
+      json outgoing_request_json{
+        {"importOperation", "useExisting"},
+        {"imports", incoming_request_json["audioFiles"]}
+      };
+      auto& import_lang = incoming_request_json["importLang"].get<std::string>();
+      if (import_lang != "") {
+        outgoing_request_json["default"] = json{
+          {"importLanguage", import_lang}
+        };
+      }
+      std::cout << outgoing_request_json.dump(2) << "\n";
+      std::string result_str;
+      int ret = server.waapi_client_.Call(ak::wwise::core::audio::import, outgoing_request_json.dump().c_str(), "{}", result_str);
+      if (!ret) {
+        std::cerr << "failed to import audio files: " << result_str << "\n";
+        res.body() = result_str;
+        res.result(http::status::not_found);
+        return;
+      }
+      res.body() = json{ {"message", "success"}}.dump();
       res.result(http::status::ok);
-      });
+    });
 
     // Get children.
     server.Register("/children", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
@@ -205,6 +198,26 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       res.body() = resp.dump();
       res.result(http::status::ok);
       return;
+      });
+
+    server.Register("/languages", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      auto& client = server.waapi_client_;
+      json req_json{
+        {"from",{{"ofType", {"Language"}}}}
+      };
+      json opt_json{
+        {"return", {"name"}}
+      };
+      std::string result_str;
+      int ret = client.Call(ak::wwise::core::object::get, req_json.dump().c_str(), opt_json.dump().c_str(), result_str);
+      if (!ret) {
+        std::cerr << "failed to sync languages\n";
+        res.body() = result_str;
+        res.result(http::status::not_found);
+        return;
+      }
+      res.body() = result_str;
+      res.result(http::status::ok);
       });
   }
 

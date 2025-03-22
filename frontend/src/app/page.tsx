@@ -1,12 +1,17 @@
 "use client";
 import React, { useState } from "react";
 import { AudioImportMainContent, Header, Sidebar } from "./components";
+import { Toaster } from "react-hot-toast";
 
 export default function Home() {
   const [sidebar, setSidebar] = useState("导入");
 
   return (
     <div className="flex flex-row">
+      <div>
+        <Toaster position="bottom-right" />
+      </div>
+
       <div className="w-1/4">
         <Sidebar setSidebar={setSidebar} sidebar={sidebar} />
       </div>

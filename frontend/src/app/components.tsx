@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDropzone } from "react-dropzone";
+import toast from "react-hot-toast";
 
 const backendUrl: string = "http://localhost:5080";
 const apiHeaders = {
@@ -51,129 +51,6 @@ const Header = () => {
     </div>
   );
 };
-
-// interface AddIpButtonInterface {
-//   getIpList: () => void;
-// }
-
-// const AddIpButton: React.FC<AddIpButtonInterface> = (props) => {
-//   const [newIp, setNewIp] = useState("");
-//   return (
-//     <div>
-//       <button
-//         className="btn"
-//         onClick={() => {
-//           const elem: HTMLElement | null =
-//             document.getElementById("add_ip_modal");
-//           if (elem) {
-//             (elem as HTMLDialogElement).showModal();
-//           }
-//         }}
-//       >
-//         Add IP
-//       </button>
-//       <dialog id="add_ip_modal" className="modal">
-//         <div className="modal-box">
-//           <h3 className="font-bold text-lg pb-4">New IP Address</h3>
-//           <label className="form-control w-full max-w-xs">
-//             <input
-//               type="text"
-//               placeholder="IPv4 Address"
-//               className="input input-bordered w-full max-w-xs"
-//               onChange={(e) => {
-//                 setNewIp(e.target.value);
-//               }}
-//             />
-//           </label>{" "}
-//           <div className="modal-action">
-//             <form method="dialog" className="flex flex-row gap-4">
-//               <button
-//                 className="btn"
-//                 onClick={() => {
-//                   const addNewIp = async () => {
-//                     await fetch(`${backendUrl}/config/iplist:update`, {
-//                       method: "POST",
-//                       headers: apiHeaders,
-//                       body: JSON.stringify({
-//                         action: "ADD",
-//                         ip_list: [newIp],
-//                       }),
-//                     });
-//                   };
-//                   addNewIp();
-//                   props.getIpList();
-//                 }}
-//               >
-//                 Add
-//               </button>
-//               <button className="btn">Cancel</button>
-//             </form>
-//           </div>
-//         </div>
-//       </dialog>
-//     </div>
-//   );
-// };
-
-// interface FirewallTableInterface {
-//   getIpList: () => void;
-//   setIpList: Dispatch<SetStateAction<string[] | undefined>>;
-//   ipList: string[];
-// }
-
-// const FirewallTable: React.FC<FirewallTableInterface> = (props) => {
-//   useEffect(() => {
-//     props.getIpList();
-//   }, [props]);
-
-//   return (
-//     <div className="overflow-x-auto">
-//       <table className="table">
-//         <thead>
-//           <tr>
-//             <th>Index</th>
-//             <th>IP</th>
-//             <th>Modify</th>
-//           </tr>
-//         </thead>
-//         {props.ipList ? (
-//           <tbody>
-//             {props.ipList.map((ip, idx) => {
-//               return (
-//                 <tr key={idx}>
-//                   <th>{idx}</th>
-//                   <td>{ip}</td>
-//                   <td>
-//                     <button
-//                       className="btn"
-//                       onClick={() => {
-//                         const deleteIp = async () => {
-//                           await fetch(`${backendUrl}/config/iplist:update`, {
-//                             method: "POST",
-//                             headers: apiHeaders,
-//                             body: JSON.stringify({
-//                               action: "REMOVE",
-//                               ip_list: [props.ipList[idx]],
-//                             }),
-//                           });
-//                         };
-//                         deleteIp();
-//                       }}
-//                     >
-//                       Delete
-//                     </button>
-//                   </td>
-//                 </tr>
-//               );
-//             })}
-//           </tbody>
-//         ) : (
-//           <></>
-//         )}
-//       </table>
-//     </div>
-//   );
-// };
 
 interface SidebarElemInterface {
   name: string;
@@ -242,96 +119,11 @@ const Sidebar: React.FC<SidebarInterface> = (props) => {
   );
 };
 
-// const FirewallMainContent = () => {
-//   const [ipList, setipList] = useState<string[]>();
-//   const getIpList = async () => {
-//     const response = await fetch(`${backendUrl}/config/iplist`, {
-//       method: "GET",
-//       headers: apiHeaders,
-//     });
-//     const result: FirewallTableInterface = await response.json();
-//     setipList(result.ipList);
-//   };
-//   return (
-//     <>
-//       <AddIpButton getIpList={getIpList} />
-//       <FirewallTable
-//         getIpList={getIpList}
-//         setIpList={setipList}
-//         ipList={ipList ?? []}
-//       />
-//     </>
-//   );
-// };
-
-// interface ToggleSwitchInterface {
-//   optionName: string;
-//   on: boolean;
-//   getConfig: () => void;
-// }
-
-// interface UpdateConfigRequest {
-//   path: string[];
-//   httpCompression: boolean;
-// }
-
-// interface GetConfigResponse {
-//   httpCompression: boolean;
-// }
-
-// const updateConfig = async (request: UpdateConfigRequest) => {
-//   await fetch(`${backendUrl}/config:update`, {
-//     method: "POST",
-//     headers: apiHeaders,
-//     body: JSON.stringify(request),
-//   });
-// };
-
-// const ToggleSwitch: React.FC<ToggleSwitchInterface> = (props) => {
-//   return (
-//     <div className="flex flex-row gap-4 justify-between w-1/4">
-//       <label>{props.optionName}</label>
-//       <input
-//         type="checkbox"
-//         className="toggle"
-//         checked={props.on ?? false}
-//         onChange={(e) => {
-//           updateConfig({
-//             path: ["http_compression"],
-//             httpCompression: e.target.checked,
-//           }).then(() => {
-//             props.getConfig();
-//           });
-//         }}
-//       />
-//     </div>
-//   );
-// };
-
-// const SettingsMainContent = () => {
-//   const [httpCompression, setHttpCompression] = useState(false);
-//   const getConfig = async () => {
-//     const response = await fetch(`${backendUrl}/config`, {
-//       method: "GET",
-//       headers: apiHeaders,
-//     });
-//     const result: GetConfigResponse = await response.json();
-//     setHttpCompression(result.httpCompression);
-//   };
-//   useEffect(() => {
-//     getConfig();
-//   }, []);
-
-//   return (
-//     <div className="flex flex-col gap-4">
-//       <ToggleSwitch
-//         getConfig={getConfig}
-//         optionName="Enable HTTP Compression"
-//         on={httpCompression}
-//       />
-//     </div>
-//   );
-// };
+function extractFileName(filePath: string): string {
+  const fileName = filePath.split(/[\\/]/).pop() || "";
+  const lastDotIndex = fileName.lastIndexOf(".");
+  return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
+}
 
 function convertToWwiseObject(containerType: string): string {
   const mapping: Record<string, string> = {
@@ -339,39 +131,38 @@ function convertToWwiseObject(containerType: string): string {
     "随机容器 (Random Container)": "<Random Container>",
     "切换容器 (Switch Container)": "<Switch Container>",
     "融合容器 (Blend Container)": "<Blend Container>",
-    "不创建容器 (None)": "",
   };
 
-  return mapping[containerType] || "<Unknown>";
+  return mapping[containerType] || "";
 }
 
-const FileUploadComponent = () => {
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop: (acceptedFiles: File[]) => {
-      acceptedFiles.forEach((file: File) => {
-        console.log("文件路径:", file.name);
-      });
-    },
-  });
-  return (
-    <div
-      {...getRootProps()}
-      className="p-6 border-2 border-dashed rounded-lg cursor-pointer text-center"
-    >
-      <input {...getInputProps()} />
-      <p className="text-gray-500">拖拽文件到这里，或点击选择文件</p>
-    </div>
-  );
-};
+// TODO: Remote file uploading.
+// const FileUploadComponent = () => {
+//   const { getRootProps, getInputProps } = useDropzone({
+//     onDrop: (acceptedFiles: File[]) => {
+//       acceptedFiles.forEach((file: File) => {
+//         console.log("文件路径:", file.name);
+//       });
+//     },
+//   });
+//   return (
+//     <div
+//       {...getRootProps()}
+//       className="p-6 border-2 border-dashed rounded-lg cursor-pointer text-center"
+//     >
+//       <input {...getInputProps()} />
+//       <p className="text-gray-500">拖拽文件到这里，或点击选择文件</p>
+//     </div>
+//   );
+// };
 
 interface ImportedAudioEntry {
   localFilePath: string;
-  name: string;
 }
 //
 // <Sound SFX> or <Sound Voice>
 const AudioImportMainContent = () => {
-  const [selectedOptions, setSelectedOptions] = useState(
+  const [selectedContainerType, setSelectedContainerType] = useState(
     "顺序容器 (Sequence Container)"
   );
   const [parentPath, setParentPath] = useState("");
@@ -380,6 +171,23 @@ const AudioImportMainContent = () => {
   // <Sound SFX> or <Sound Voice>
   const [importType, setImportType] = useState("<Sound SFX>");
   const [importLang, setImportLang] = useState("English(US)");
+  const [userLangs, setUserLangs] = useState<string[]>();
+
+  const getUserLanguages = async () => {
+    const resp = await fetch(`${backendUrl}/languages`, {
+      method: "GET",
+      headers: apiHeaders,
+    });
+    const resp_json = await resp.json();
+    const rawUserLangs = resp_json["return"].map(
+      (obj: { name: string }) => obj.name
+    );
+    setUserLangs(
+      rawUserLangs.filter(
+        (name: string) => name != "SFX" && name != "External" && name != "Mixed"
+      )
+    );
+  };
 
   const getSelectedFiles = async () => {
     const resp = await fetch(`${backendUrl}/select`, {
@@ -387,12 +195,60 @@ const AudioImportMainContent = () => {
       headers: apiHeaders,
     });
     const json_resp = await resp.json();
+    const addedFiles = json_resp.files.map((path: string) => ({
+      localFilePath: path,
+    }));
     setAudioEntries([
       ...(audioEntries || []),
       ...json_resp.files.map((path: string) => ({
         localFilePath: path,
+        ...addedFiles,
       })),
     ]);
+    toast.success(`成功添加 ${addedFiles.length} 个音频文件`);
+  };
+
+  const importAudio = async () => {
+    // Check necessary fields.
+    if (
+      convertToWwiseObject(selectedContainerType) != "" &&
+      newContainerName == ""
+    ) {
+      toast.error("还未设置新容器名称");
+      return;
+    }
+    if (
+      audioEntries == null ||
+      (audioEntries != null && audioEntries.length == 0)
+    ) {
+      toast.error("没有添加的音频文件");
+      return;
+    }
+    // Call api.
+    const convertedContainerType = convertToWwiseObject(selectedContainerType);
+    const newContainerPath =
+      convertedContainerType != ""
+        ? `\\${convertedContainerType}${newContainerName}`
+        : "";
+    const resp = await fetch(`${backendUrl}/import`, {
+      method: "POST",
+      headers: apiHeaders,
+      body: JSON.stringify({
+        audioFiles: audioEntries?.map((enrty: ImportedAudioEntry) => ({
+          audioFile: enrty.localFilePath,
+          objectPath: `${parentPath}${newContainerPath}\\${importType}${extractFileName(
+            enrty.localFilePath
+          )}`,
+        })),
+        importLang: importType == "<Sound Voice>" ? importLang : "",
+      }),
+    });
+    const json_resp = await resp.json();
+    if (resp.status != 200) {
+      toast.error(json_resp);
+      return;
+    }
+    toast.success("导入成功");
   };
 
   return (
@@ -412,9 +268,9 @@ const AudioImportMainContent = () => {
           <label className="block">创建新容器</label>
           <select
             className="select select-bordered"
-            value={selectedOptions}
+            value={selectedContainerType}
             onChange={(e) => {
-              setSelectedOptions(e.target.value);
+              setSelectedContainerType(e.target.value);
             }}
           >
             <option>顺序容器 (Sequence Container)</option>
@@ -424,7 +280,11 @@ const AudioImportMainContent = () => {
             <option>不创建容器 (None)</option>
           </select>
         </div>
-        <div className={selectedOptions == "不创建容器 (None)" ? "hidden" : ""}>
+        <div
+          className={
+            selectedContainerType == "不创建容器 (None)" ? "hidden" : ""
+          }
+        >
           <label className="block">新容器名称</label>
           <input
             type="text"
@@ -445,6 +305,7 @@ const AudioImportMainContent = () => {
             onChange={(e) => {
               setImportType(`<${e.target.value}>`);
             }}
+            onClick={getUserLanguages}
           >
             <option>{"Sound SFX"}</option>
             <option>{"Sound Voice"}</option>
@@ -459,30 +320,25 @@ const AudioImportMainContent = () => {
               setImportLang(e.target.value);
             }}
           >
-            <option>English(US)</option>
-            <option></option>
+            {userLangs?.map((language, idx) => {
+              return <option key={idx}>{language}</option>;
+            })}
           </select>
         </div>
       </div>
       {/* import button */}
-      <button
-        className="btn btn-outline"
-        onClick={() => {
-          console.log(selectedOptions);
-          console.log(parentPath);
-        }}
-      >
+      <button className="btn btn-outline" onClick={importAudio}>
         导入
       </button>
       {/* select files button */}
       <button className="btn btn-outline" onClick={getSelectedFiles}>
-        选择文件
+        添加文件
       </button>
-
       {/* choose files */}
-      <div>
+      {/* TODO: Remote file upload. */}
+      {/* <div>
         <FileUploadComponent />
-      </div>
+      </div> */}
       {/* audio files ready for importing */}
       <table className="table">
         <thead>
