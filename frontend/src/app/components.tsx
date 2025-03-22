@@ -173,6 +173,25 @@ const AudioImportMainContent = () => {
   const [importLang, setImportLang] = useState("English(US)");
   const [userLangs, setUserLangs] = useState<string[]>();
 
+  const getSelectedPath = async () => {
+    const resp = await fetch(`${backendUrl}/getSelectedPath`, {
+      method: "GET",
+      headers: apiHeaders,
+    });
+    const resp_json = await resp.json();
+    if (resp.status != 200) {
+      toast.error(JSON.stringify(resp_json));
+      return;
+    }
+    const objects = resp_json["objects"];
+    if (objects == null || objects.length == 0) {
+      toast.error("failed to get selected path");
+      return;
+    }
+    setParentPath(objects[0]["path"]);
+    toast.success(objects[0]["path"]);
+  };
+
   const bringToForeground = async () => {
     await fetch(`${backendUrl}/findwwise`, {
       method: "GET",
@@ -294,14 +313,22 @@ const AudioImportMainContent = () => {
   return (
     <div>
       {/* set parent path */}
-      <label className="block">设定导入位置</label>
-      <input
-        type="text"
-        className="input border-black"
-        onChange={(e) => {
-          setParentPath(e.target.value);
-        }}
-      ></input>
+      <div>
+        <label className="block">设定导入位置</label>
+        <div className="flex flex-row">
+          <input
+            type="text"
+            value={parentPath}
+            className="input border-black"
+            onChange={(e) => {
+              setParentPath(e.target.value);
+            }}
+          />
+          <button className="btn btn-outline" onClick={getSelectedPath}>
+            使用 Wwise 中选中的路径
+          </button>
+        </div>
+      </div>
       {/* create a new container */}
       <div className="flex flex-row">
         <div>

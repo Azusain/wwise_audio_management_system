@@ -242,6 +242,23 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       return;
     });
 
+    server.Register("/getSelectedPath", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      auto& client = server.waapi_client_;
+      json opt_json{
+        {"return", {"path"}}
+      };
+      std::string result_str;
+      int ret = client.Call(ak::wwise::ui::getSelectedObjects, "{}", opt_json.dump().c_str(), result_str);
+      res.body() = result_str;
+      if (!ret) {
+        std::cerr << "failed to get selected path: " << result_str << "\n";
+        res.result(http::status::not_found);
+        return;
+      }
+      res.result(http::status::ok);
+      return;
+    });
+
     server.Register("/highlight", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
       auto& client = server.waapi_client_;
       json req_json = json::parse(req.body());
