@@ -214,6 +214,84 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
       res.body() = result_str;
       res.result(http::status::ok);
       });
+
+    server.Register("/commands", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      auto& client = server.waapi_client_;
+      std::string result_str;
+      int ret = client.Call(ak::wwise::ui::commands::getCommands, "{}", "{}", result_str);
+      res.body() = result_str;
+      if (!ret) {
+        std::cerr << "failed to list commands\n";
+        res.result(http::status::not_found);
+        return;
+      }
+      res.result(http::status::ok);
+      return;
+    });
+
+    server.Register("/findwwise", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      auto& client = server.waapi_client_;
+      std::string result_str;
+      int ret = client.Call(ak::wwise::ui::bringToForeground, "{}", "{}", result_str);
+      if (!ret) {
+        std::cerr << "failed to bring Wwise to foreground: " << result_str << "\n";
+        res.result(http::status::not_found);
+        return;
+      }
+      res.result(http::status::ok);
+      return;
+    });
+
+    server.Register("/highlight", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      auto& client = server.waapi_client_;
+      json req_json = json::parse(req.body());
+      if (!req_json.contains("id")) {
+        res.body() = json{ {"error", "missing json field: id"} }.dump();
+        return;
+      }
+      json outgoing_req_json{
+        {"command", "FindInProjectExplorerSyncGroup1"},
+        {"objects", {req_json["id"].get<std::string>()}}
+      };
+      std::string result_str;
+      int ret = client.Call(ak::wwise::ui::commands::execute, outgoing_req_json.dump().c_str(), "{}", result_str);
+      if (!ret) {
+        std::cerr << "failed to highlight object in Wwise\n";
+        res.result(http::status::not_found);
+        res.body() = result_str;
+        return;
+      }
+      res.result(http::status::ok);
+      return;
+      });
+
+    server.Register("/guid", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
+      auto& client = server.waapi_client_;
+      // TODO: json::parse() may throw exception...
+      json req_json = json::parse(req.body());
+      if (!req_json.contains("path")) {
+        res.body() = json{ {"error", "missing json field: path"} }.dump();
+        return;
+      }
+      std::string path = req_json["path"].get<std::string>();
+      json outgoing_req_json{
+        {"from", {{"path", {path}}}},
+      };
+      json opt_json{
+        {"return", {"id"}}
+      };
+      std::string result_str;
+      int ret = client.Call(ak::wwise::core::object::get, outgoing_req_json.dump().c_str(), opt_json.dump().c_str(), result_str);
+      res.body() = result_str;
+      if (!ret) {
+        std::cerr << "failed to get GUID from path: " << path << "\n";
+        res.result(http::status::not_found);
+        return;
+      }
+      res.body() = result_str;
+      res.result(http::status::ok);
+      return;
+      });
   }
 
   catch (const std::exception& e) {

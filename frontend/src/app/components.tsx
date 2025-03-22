@@ -130,7 +130,7 @@ function convertToWwiseObject(containerType: string): string {
     "顺序容器 (Sequence Container)": "<Sequence Container>",
     "随机容器 (Random Container)": "<Random Container>",
     "切换容器 (Switch Container)": "<Switch Container>",
-    "融合容器 (Blend Container)": "<Blend Container>",
+    "混合容器 (Blend Container)": "<Blend Container>",
   };
 
   return mapping[containerType] || "";
@@ -172,6 +172,40 @@ const AudioImportMainContent = () => {
   const [importType, setImportType] = useState("<Sound SFX>");
   const [importLang, setImportLang] = useState("English(US)");
   const [userLangs, setUserLangs] = useState<string[]>();
+
+  const bringToForeground = async () => {
+    await fetch(`${backendUrl}/findwwise`, {
+      method: "GET",
+      headers: apiHeaders,
+    });
+  };
+
+  const highlightObject = async (id: string) => {
+    await fetch(`${backendUrl}/highlight`, {
+      method: "POST",
+      headers: apiHeaders,
+      body: JSON.stringify({
+        id: id,
+      }),
+    });
+  };
+
+  const getGUIDFromPath = async (path: string) => {
+    const resp = await fetch(`${backendUrl}/guid`, {
+      method: "POST",
+      headers: apiHeaders,
+      body: JSON.stringify({
+        path: path,
+      }),
+    });
+    const resp_json = await resp.json();
+    const ret = resp_json["return"];
+    if (resp.status != 200 || ret.length == 0) {
+      toast.error(`failed to get GUID from path ${path}`);
+      return "";
+    }
+    return ret[0]["id"];
+  };
 
   const getUserLanguages = async () => {
     const resp = await fetch(`${backendUrl}/languages`, {
@@ -249,6 +283,12 @@ const AudioImportMainContent = () => {
       return;
     }
     toast.success("导入成功");
+    // After imnporting audio.
+    await bringToForeground();
+    const guid = await getGUIDFromPath(
+      parentPath + (newContainerName == "" ? "" : `\\${newContainerName}`)
+    );
+    await highlightObject(guid);
   };
 
   return (
@@ -276,7 +316,7 @@ const AudioImportMainContent = () => {
             <option>顺序容器 (Sequence Container)</option>
             <option>随机容器 (Random Container)</option>
             <option>切换容器 (Switch Container)</option>
-            <option>融合容器 (Blend Container)</option>
+            <option>混合容器 (Blend Container)</option>
             <option>不创建容器 (None)</option>
           </select>
         </div>
