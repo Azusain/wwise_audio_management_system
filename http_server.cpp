@@ -4,10 +4,7 @@
 #include <unordered_map>
 #include <AK/WwiseAuthoringAPI/waapi.h>
 #include "http_server.h"
-#include <AK/WwiseAuthoringAPI/AkAutobahn/AkJson.h>
-#include <AK/WwiseAuthoringAPI/AkAutobahn/AkVariant.h>
 #include <AK/WwiseAuthoringAPI/AkAutobahn/Client.h>
-#include <AK/WwiseAuthoringAPI/AkJsonBase.h>
 #include <exception>
 #include <string>
 #include <type_traits>
@@ -20,7 +17,6 @@
 #include <boost/beast/http/message_fwd.hpp>
 #include <boost/beast/http/status.hpp>
 #include <boost/beast/http/string_body_fwd.hpp>
-#include "RapidJsonUtils.h"
 #include "json.hpp"
 #include "ui.h"
 
@@ -150,9 +146,9 @@ bool ConfigureHttpRouter(HttpServer& server) noexcept {
         res.result(http::status::not_found);
         return;
       }
-      res.body() = json{ {"message", "success"}}.dump();
+      res.body() = json{ {"message", "success"} }.dump();
       res.result(http::status::ok);
-    });
+      });
 
     // Get children.
     server.Register("/children", [](const http::request<http::string_body>& req, http::response<http::string_body>& res, HttpServer& server) {
